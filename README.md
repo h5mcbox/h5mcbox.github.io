@@ -6,6 +6,8 @@
 [Jannchie见齐的数据可视化](/data-sort/src)
 
 [Bilibili Fans](/bilicount)
+
+[一些有趣的html项目](/happy-html)
 ### Markdown
 
 markdown是一种轻量且易于使用的语法，用于设计您的写作风格。它包括
