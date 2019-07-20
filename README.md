@@ -8,6 +8,8 @@
 [Bilibili Fans](/bilicount)
 
 [一些有趣的html项目](/happy-html)
+
+[自制的杀毒软件](/bat-anti-virus)
 ### Markdown
 
 markdown是一种轻量且易于使用的语法，用于设计您的写作风格。它包括
