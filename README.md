@@ -41,7 +41,7 @@ markdown是一种轻量且易于使用的语法，用于设计您的写作风格
 
 ### 支持与联系
 
-发现自己的站点有问题? 查看我们的[文档](https://help.github.com/categories/github-pages-basics/$ 或 [联系支持](https://github.com/contact)我们会帮你解决的。
+发现自己的站点有问题? 查看我们的[文档](https://help.github.com/categories/github-pages-basics/$) 或 [联系支持](https://github.com/contact)我们会帮你解决的。
 
 ### 文档翻译者:H503mc
 
