@@ -44,3 +44,20 @@ markdown是一种轻量且易于使用的语法，用于设计您的写作风格
 发现自己的站点有问题? 查看我们的[文档] (https://help.github.com/categories/github-pages-basics/) 或 [联系支持](https://github.com/contact] 我们会帮你解决的。
 
 ### 文档翻译者:H503mc
+
+<div id="gitment" class="gitment"></div>
+<!-- 加载gitment -->
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+var gitment = new Gitment({
+  id: '{{date format="YYYYMMDDHHmmss"}}',
+  owner: 'h5mcbox',
+  repo: 'pages',
+  oauth: {
+    client_id: '079257a4b61555fe9332',
+    client_secret: 'cf450ea90d97f7649c88d566ae083e033075f8d8',
+  },
+})
+gitment.render('gitment')
+</script>
