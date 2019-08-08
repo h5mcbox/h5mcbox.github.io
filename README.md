@@ -51,7 +51,6 @@ markdown是一种轻量且易于使用的语法，用于设计您的写作风格
 <script src="https://billts.site/js/gitment.js"></script>
 <script>
 var gitment = new Gitment({
-  id: '{{date format="YYYYMMDDHHmmss"}}',
   owner: 'h5mcbox',
   repo: 'pages',
   oauth: {
