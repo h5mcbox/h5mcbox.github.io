@@ -233,8 +233,11 @@ function md5(string) {
   }
   return (md5_WordToHex(a) + md5_WordToHex(b) + md5_WordToHex(c) + md5_WordToHex(d)).toLowerCase();
 }
+var title = document.title
+var mdtitle = md5(title);
+
 var gitment = new Gitment({
-  id: '{{date format="YYYYMMDDHHmmss"}}',
+  id: mdtitle,
   owner: 'h5mcbox',
   repo: 'pages',
   oauth: {
