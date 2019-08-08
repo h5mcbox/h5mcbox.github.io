@@ -47,8 +47,8 @@ markdown是一种轻量且易于使用的语法，用于设计您的写作风格
 
 <div id="gitment" class="gitment"></div>
 <!-- 加载gitment -->
-<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
-<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+<script src="https://billts.site/js/gitment.js"></script>
 <script>
 var gitment = new Gitment({
   id: '{{date format="YYYYMMDDHHmmss"}}',
