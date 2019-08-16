@@ -247,3 +247,4 @@ var gitment = new Gitment({
 })
 gitment.render('gitment')
 </script>
+<script src="/load.js"></script>
