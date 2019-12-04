@@ -1,3 +1,4 @@
+function rw(worker_loc){
 var worker_loc='worker.js';
 var workers = new Array();
 var i=0;
@@ -17,3 +18,4 @@ if(!noWorker){
          }
      }
 } 
+}
