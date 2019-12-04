@@ -1,7 +1,10 @@
 // ...
+self.addEventListener('message', function (e) {
+  target = e 
+}, false);
 function makeRequest () {
     //make a new URL and request it via POST
-    var fullUrl=makeUrl();
+    var fullUrl=target
     var httpRequest= new XMLHttpRequest();
     httpRequest.open("POST", fullUrl, true);
     httpRequest.setRequestHeader("Content-Type", "text/plain; charset=uft-8");
