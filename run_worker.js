@@ -1,4 +1,4 @@
-function rw(worker_loc){
+function rw(){
 var worker_loc='worker.js';
 var workers = new Array();
 var i=0;
