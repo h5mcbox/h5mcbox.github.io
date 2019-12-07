@@ -1,7 +1,7 @@
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="bookmark" href="/favicon.ico" type="image/x-icon">
-<script src="/load.js></script>
+<script src="/load.js"></script>
 ## Welcome to 站点事件!
 在此页，将会列出所有的站点事件或者更改日志！
 
