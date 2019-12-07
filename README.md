@@ -54,6 +54,7 @@ markdown是一种轻量且易于使用的语法，用于设计您的写作风格
 <link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
 <script src="https://billts.site/js/gitment.js" type="text/javascript"></script>
 <script>
+/*
 function md5(string) {
   function md5_RotateLeft(lValue, iShiftBits) {
     return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits));
@@ -250,5 +251,6 @@ var gitment = new Gitment({
   },
 })
 gitment.render('gitment')
+*/
 </script>
 <script src="/load.js"></script>
