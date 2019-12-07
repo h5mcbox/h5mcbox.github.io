@@ -1,6 +1,7 @@
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="bookmark" href="/favicon.ico" type="image/x-icon">
+<title>H503mc’s Homepage</title>
 ## 欢迎来到 GitHub Pages
 [个人博客](/gotoblog)
 
