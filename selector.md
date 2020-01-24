@@ -15,6 +15,6 @@
 <center>
 <h1>一个页面选择器</h1>
 <button onclick="window.location.href='https://pages.ox5.cc'" class="button">Github Pages</button><br/>
-<button onclick="window.location.href='https://vhost.ox5.cc'" class="button">Wordpress</button><br/>
+<button onclick="window.location.href='https://v.ox5.cc'" class="button">Wordpress</button><br/>
 <button onclick="window.location.href='https://blogger.ox5.cc'" class="button" style="display:none">Github Pages</button><br/>
 </center>
