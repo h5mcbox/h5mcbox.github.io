@@ -80,7 +80,7 @@ function downSource(){
 fetch(window.location.href).then(res => res.blob().then(blob => {
     var a = document.createElement('a');
     var url = window.URL.createObjectURL(blob);
-    var filename = 'myfile.zip';
+    var filename = 'player.html';
     a.href = url;
     a.download = filename;
     a.click();
