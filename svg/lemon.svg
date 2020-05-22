@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+                 <text x="0" y="10">🍋</text>
+                 <rect id="rect" fill="#7950F2" x="0" y="19" width="0" height="14" rx="2">
+                  <animate attributeName="width"
+                      begin="0.5s"
+                      dur="600ms"
+                      from="0"
+                      to="222"
+                      repeatCount="1"
+                      fill="freeze"
+                      calcMode="spline"
+                      keyTimes="0; 1"
+                      keySplines="0.3, 0.61, 0.355, 1" />
+                </rect>
+</svg>
