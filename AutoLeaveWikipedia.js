@@ -9,7 +9,7 @@ window["LeaveNow"]=function(){
     LeaveWindow=window.open("https://zh.wikipedia.org/wiki/Special:%E7%94%A8%E6%88%B7%E9%80%80%E5%87%BA")
     LeaveWindow.onload=async function(){try{LeaveWindow.document.querySelector(".oo-ui-inputWidget-input.oo-ui-buttonElement-button").click()}catch(e){};await sleep(3000);LeaveWindow.close();localStorage["refresh"]="";delete localStorage["refresh"]}
 }
-window["LocalStorageRefresh"]=function(e){
+window["localStorageRefresh"]=function(e){
     if(e.key=="Refresh"){window.location.reload()}
 }
-addEventListener("storage",LocalStorageRefresh)
+addEventListener("storage",localStorageRefresh)
