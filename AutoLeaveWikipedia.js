@@ -13,3 +13,4 @@ window["localStorageRefresh"]=function(e){
     if(e.key=="Refresh"){window.location.reload()}
 }
 addEventListener("storage",localStorageRefresh)
+document.querySelector("#pt-logout a").onclick=LeaveNow
