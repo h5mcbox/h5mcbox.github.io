@@ -1,1 +1,2 @@
-ads.ad=true
+ads.ad=true;
+window.noAdBlockers = true;
