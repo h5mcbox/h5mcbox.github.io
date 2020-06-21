@@ -3,7 +3,7 @@ window.sleep=function(e){return new Promise(function(resolve,reject){setTimeout(
 window.AutoLeave=async function(){
     console.log("AutoLeave Version 0.1")
     await sleep(900000)
-    LeaveNow()
+    //LeaveNow()
 }
 AutoLeave()
 window["LeaveNow"]=function(){
