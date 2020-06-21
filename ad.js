@@ -1,0 +1,1 @@
+ads.ad=true
