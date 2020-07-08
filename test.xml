@@ -9,5 +9,10 @@
             <link>https://hello.ora.moe</link>
             <description>Rss1</description>
         </item>
+        <item>
+            <title>Blg1</title>
+            <link>https://hello.ora.moe</link>
+            <description>Rss2</description>
+        </item>
     </channel>
 </rss>
