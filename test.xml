@@ -1,0 +1,13 @@
+<? xml version="1.0" encoding="UTF-8" ?>
+<rss>
+    <channel>
+        <title>test</title>
+        <link>https://hellp.ora.moe</link>
+        <description>Hello xss.</description>
+        <item>
+            <title>Blg</title>
+            <link>https://hello.ora.moe</link>
+            <description>Rss1</description>
+        </item>
+    </channel>
+</rss>
