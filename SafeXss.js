@@ -7,7 +7,7 @@ function SafeXss(){
                 eval(e["data"]["xssctrl"]["xss"])
             }
             w.xsscode=Math.floor(Math.random()*999999)+1
-            console.log("XssCode is expired.New code is"+xsscode)
+            console.log("XssCode is expired.New code is "+xsscode)
         }
     })
     w.xsscode=Math.floor(Math.random()*999999)+1
