@@ -11,5 +11,5 @@ function SafeXss(){
         }
     })
     w.xsscode=Math.floor(Math.random()*999999)+1
-    console.log("New XssCode is"+xsscode)
+    console.log("New XssCode is "+xsscode)
 }
