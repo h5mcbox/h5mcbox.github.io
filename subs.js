@@ -20,7 +20,7 @@ function subs(){
         return false;
     }
     env.clear=function(){
-        env.list=[]
+        env.list.length=0
     }
     return {add:env.add,push:env.toggle,del:env.del,clear:env.clear};
 }
