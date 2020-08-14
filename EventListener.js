@@ -1,4 +1,4 @@
-const EventListener=function(){
+EventListener=function(){
     'use strict';
     var root={},env=root,privenv={},EventListener={}
     var subs=function(){
