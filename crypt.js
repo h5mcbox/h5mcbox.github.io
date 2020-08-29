@@ -2,7 +2,7 @@ crypt={
     encrypt:function(a,b,c){
         var p=2
         var c=c<=36?c:c%36;
-        var c=(c=1)?c+1:c
+        var c=(c==1)?c+1:c
         var o=a.split("")
         var r=[]
         o.forEach(e=>{
@@ -16,7 +16,7 @@ crypt={
     decrypt:function(a,b,c){
         var p=2
         var c=c<=36?c:c%36;
-        var c=(c=1)?c+1:c
+        var c=(c==1)?c+1:c
         var o=a.split("_")
         var r=[]
         o.forEach(e=>{
