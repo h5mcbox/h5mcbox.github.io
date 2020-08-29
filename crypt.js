@@ -9,7 +9,7 @@ crypt={
             p=p*7-4
             p=p<37?p:p%37
             var t=e.charCodeAt(0)
-            r.push(((t+p)^(b+p)).toString(c))
+            r.push((t^(b+p)).toString(c))
         })
         return r.join(".")
     },
@@ -23,7 +23,7 @@ crypt={
             p=p*7-4
             p=p<37?p:p%37
             var t=parseInt(e,c)
-            r.push(String.fromCharCode((t+p)^(b+p)))
+            r.push(String.fromCharCode(t^(b+p)))
         })
         return r.join("")
     }
