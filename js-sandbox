@@ -1,0 +1,21 @@
+function sandbox(code){
+    var context=Object.create(window)
+    var scontext={}
+    var FakedWindow=new Proxy(context,{
+        get(obj,prop){
+            var t=prop
+            if(t==="self"||t==="window"||t==="this"||t==="top"||t==="parent"){
+                return FakedWindow
+            }
+            if(!scontext[prop]&&typeof context[prop]==="object"){
+                scontext[prop]=Object.create(context[prop])
+            }
+            return (typeof context[prop]==="object")?scontext[prop]:context[prop]
+        },
+        has(){
+            return true
+        }
+    })
+    Function("proxy",`with(proxy){;${code};}`)(FakedWindow)
+    return [FakedWindow,context,scontext];
+}
