@@ -27,5 +27,6 @@ function sandbox(code,sandboxParent=window){
     })
     FakedWindow._hidden_=Function("proxy",`with(proxy){;${code};}`);
     context._hidden_(FakedWindow);
+    delete context._hidden_
     return [FakedWindow,context,scontext];
 }
