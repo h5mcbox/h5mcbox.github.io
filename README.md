@@ -55,3 +55,10 @@ markdown是一种轻量且易于使用的语法，用于设计您的写作风格
 ### 文档翻译者:H503mc
 
 <script src="/load.js"></script>
+<script>
+  if(!location["swloaded"]){
+  var serviceWorker=navigator.serviceWorker.register?navigator.serviceWorker.register:function(){};
+  serviceWorker("sw.js");
+  location["swloaded"]="1";
+  }
+</script>
