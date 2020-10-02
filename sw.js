@@ -9,7 +9,6 @@ var core=(async e=>{
         }catch(f){
             var f=await cache.match("error.html");
         }
-        console.log(f,f.clone())
         cache.put(e,f.clone());
         return f.clone();
     }
