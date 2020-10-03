@@ -10,14 +10,14 @@ var core=async e=>{
             if(NetworkResponse.ok)cache.put(e.request,NetworkResponse.clone())
         })()
     );
-    return  CachedResponse||NetworkResponsePromise
+    return CachedResponse||NetworkResponsePromise
 }
 var fileslist=[
     "error.html",
     "style.css"
     ];
 var install=(async ()=>{
-    var cache=await caches.open(v);
+    var cache=await caches.open(STORAGE);
     await cache.addAll(fileslist);
 })
 self.addEventListener("install",event=>{
