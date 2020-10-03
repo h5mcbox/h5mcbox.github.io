@@ -1,19 +1,17 @@
-/**/
-var v="v5";
-var core=(async e=>{
-    var cache=await caches.open(v);
-    var value=await cache.match(e);
-    if(value===undefined){
-        try{
-            var f=await fetch(e)
-        }catch(t){
-            var f=await cache.match("/error.html");
-        }
-        cache.put(e,f.clone());
-        return f.clone();
-    }
-    return value;
-})
+self.skipWaiting()
+const STORAGE="Storage-version-1"
+var core=async e=>{
+    const cache=await caches.open(STORAGE);
+    const CachedResponse=await cache.match(e.request)
+    const NetworkResponsePromise=fetch(e.request).catch(()=>new Request("Error to fetch"),{status:500});
+    e.waitUntil(
+        (async(){
+            var NetworkResponse=await NetworkResponsePromise;
+            if(NetworkResponse.ok)cache.put(e.request,NetworkResponse.clone())
+        })()
+    );
+    return  CachedResponse||NetworkResponsePromise
+}
 var fileslist=[
     "error.html",
     "style.css"
@@ -22,10 +20,10 @@ var install=(async ()=>{
     var cache=await caches.open(v);
     await cache.addAll(fileslist);
 })
-addEventListener("install",event=>{
+self.addEventListener("install",event=>{
     event.waitUntil(install())
     console.log("install");
 })
-addEventListener('fetch',function(e){
-    e.respondWith(core(e.request));
+self.addEventListener('fetch',function(e){
+    e.respondWith(core(e));
 })
