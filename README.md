@@ -56,9 +56,6 @@ markdown是一种轻量且易于使用的语法，用于设计您的写作风格
 
 <script src="/load.js"></script>
 <script>
-  if(!localStorage["swloaded"]){
   var serviceWorker=navigator.serviceWorker.register?e=>navigator.serviceWorker.register(e):function(){};
   serviceWorker("sw.js");
-  localStorage["swloaded"]="1";
-  }
 </script>
