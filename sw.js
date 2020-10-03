@@ -24,7 +24,7 @@ var install=(async ()=>{
     var cache=await caches.open(v);
     await cache.addAll(fileslist);
 })
-addEventListener("install",()=>{
+addEventListener("install",event=>{
     event.waitUntil(install())
     console.log("install");
 })
