@@ -1,0 +1,12 @@
+{
+  "name": "H503MC's Pages",
+  "short_name": "H503MC's Pages",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff",
+  "description": "A PWA TEST",
+  "icons": [{
+    "src": "favicon.ico",
+    "sizes": "128x118"
+  }]
+}
