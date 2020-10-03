@@ -5,7 +5,7 @@ var core=async e=>{
     const CachedResponse=await cache.match(e.request)
     const NetworkResponsePromise=fetch(e.request).catch(()=>new Request("Error to fetch"),{status:500});
     e.waitUntil(
-        (async(){
+        (async ()=>{
             var NetworkResponse=await NetworkResponsePromise;
             if(NetworkResponse.ok)cache.put(e.request,NetworkResponse.clone())
         })()
