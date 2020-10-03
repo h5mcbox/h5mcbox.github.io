@@ -1,3 +1,4 @@
+<link rel="manifest" href="/manifest.json">
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <link rel="bookmark" href="/favicon.ico" type="image/x-icon">
