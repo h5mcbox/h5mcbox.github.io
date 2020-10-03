@@ -6,10 +6,8 @@ var core=(async e=>{
     if(value===undefined){
         try{
             var f=await fetch(e)
-        }catch(f){
-            var f=await cache.match("error.html");
-            var l=await cache.match("/error.html");
-            console.log(f,l)
+        }catch(t){
+            var f=await cache.match("/error.html");
         }
         cache.put(e,f.clone());
         return f.clone();
@@ -29,6 +27,5 @@ addEventListener("install",event=>{
     console.log("install");
 })
 addEventListener('fetch',function(e){
-    console.log(core(e.request))
     e.respondWith(core(e.request));
 })
