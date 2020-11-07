@@ -8,7 +8,8 @@ crypt={
         var r=[]
         o.forEach(e=>{
             p=p*7-4
-            p=p<37?p:p%37
+            p=p<76?p:p%76
+            p=p^b
             var t=e.charCodeAt(0)
             r.push((t^(b+p)).toString(c))
         })
@@ -22,7 +23,8 @@ crypt={
         var r=[]
         o.forEach(e=>{
             p=p*7-4
-            p=p<37?p:p%37
+            p=p<76?p:p%76
+            p=p^b
             var t=parseInt(e,c)
             r.push(String.fromCharCode(t^(b+p)))
         })
