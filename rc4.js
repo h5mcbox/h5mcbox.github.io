@@ -22,7 +22,7 @@ rc4=function(datastream,keystream){
         rf=(rf+Sbox[re])%256;
         swap(Sbox,re,rf);
         rg=Sbox[(Sbox[re]+Sbox[rf])%256];
-        result.push(datastream[re]^rg);
+        result.push(datastream[rd]^rg);
     }
     return result;
 }
