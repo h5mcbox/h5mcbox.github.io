@@ -12,7 +12,7 @@ const allowedHosts=[
   "cdnjs.loli.net"
 ];
 const redirectHosts={
-  
+  "gstatic.loli.net":"fonts.gstatic.com"
 };
 var core=async e=>{
   var targetURL=e.request.url;
