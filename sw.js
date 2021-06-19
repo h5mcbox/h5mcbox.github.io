@@ -14,7 +14,7 @@ var core=async e=>{
       (async ()=>{
           var NetworkResponse=await NetworkResponsePromise;
           if(NetworkResponse.ok)cache.put(e.request,NetworkResponse.clone());
-      })();
+      })()
   );
   return CachedResponse||NetworkResponsePromise;
 }
