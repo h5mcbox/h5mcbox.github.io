@@ -23,15 +23,16 @@ var core=async e=>{
     targetURL=targetURLObject.href;
   }
   const cache=await caches.open(STORAGE);
-  const CachedResponse=await cache.match(e.request)
+  const CachedResponse=await cache.match(e.request);
+  var NetworkResponsePromise;
   if(!allowedHosts.includes(targetURLObject.host)){
     console.log(`403 Forbidden:${targetURLObject.host}`);
     return new Response("<h1>403 Forbidden</h1><br><hr><br><span>For safe,this request is refused by Service Worker.</span>",{status:403,"statusText":"HitServiceWorker."});
   }
   if(e.request.mode==="navigate"){
-    const NetworkResponsePromise=fetch(e.request).catch(()=>new Request("Error to fetch"),{status:500});
+    NetworkResponsePromise=fetch(e.request).catch(()=>new Request("Error to fetch"),{status:500});
   }else{
-    const NetworkResponsePromise=fetch(targetURLObject,e.request).catch(()=>new Request("Error to fetch"),{status:500});
+    NetworkResponsePromise=fetch(targetURLObject,e.request).catch(()=>new Request("Error to fetch"),{status:500});
   }
   e.waitUntil(
       (async ()=>{
