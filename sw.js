@@ -1,7 +1,7 @@
 self.skipWaiting()
 const STORAGE="Storage-version-1"
 var getURL=(url)=>new URL(new Request(url).url);
-const allowedHosts=["hello.ora.moe","fonts.googleapis.com","gstatic.com","loli.net"];
+const allowedHosts=["hello.ora.moe","googleapis.com","fonts.googleapis.com","gstatic.com","fonts.gstatic.com","loli.net"];
 var core=async e=>{
   const cache=await caches.open(STORAGE);
   const CachedResponse=await cache.match(e.request)
