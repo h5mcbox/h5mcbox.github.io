@@ -8,6 +8,7 @@ const allowedHosts=[
   "gstatic.com",
   "fonts.gstatic.com",
   "loli.net",
+  "cdnjs.cloudflare.com"
 ];
 const redirectHosts={
   "gstatic.loli.net":"fonts.gstatic.com",
