@@ -8,11 +8,11 @@ const allowedHosts=[
   "gstatic.com",
   "fonts.gstatic.com",
   "loli.net",
-  "fonts.loli.net",
-  "cdnjs.loli.net"
 ];
 const redirectHosts={
-  "gstatic.loli.net":"fonts.gstatic.com"
+  "gstatic.loli.net":"fonts.gstatic.com",
+  "fonts.loli.net":"fonts.googleapis.com",
+  "cdnjs.loli.net":"cdnjs.cloudflare.com"
 };
 var core=async e=>{
   var targetURL=e.request.url;
