@@ -100,12 +100,12 @@ function sandbox(sandboxParent = null) {
       errors.push(error);
       throw error;
     }
-    if(isIdentify){
+    if (isIdentify) {
       var result = _InternalRun(`return ${code}`);
-    }else {
+    } else {
       var result = _InternalRun(code);
     }
-    if ((result !== undefined)&&(!isIdentify)) { throw "The script in sandbox cannot return a value."; }
+    if ((result !== undefined) && (!isIdentify)) { throw "The script in sandbox cannot return a value."; }
     return result;
   };
   return {
