@@ -79,7 +79,7 @@ function sandbox(sandboxParent = null) {
   }
   var SandboxFunction = function (code = "") {
     var key = code.replaceAll(" ", "").replaceAll("\n", ""), isIdentify = true;
-    var invaildChars = "!@#$%^&*+\"\\\':;?/><,{}[]()=".split("")
+    var invaildChars = "!@#$%^&*+\"\\\':;?/><, \n".split("")
     invaildChars.forEach(e => { if (key.includes(e)) { isIdentify = false } });
     if (!isNaN(parseInt(key[0]))) { isIdentify = false }
     var keySplit = key.split("."), current = FakedGlobal;
@@ -100,8 +100,12 @@ function sandbox(sandboxParent = null) {
       errors.push(error);
       throw error;
     }
-    var result = _InternalRun(code);
-    if (result !== undefined) { throw "The script in sandbox cannot return a value."; }
+    if(isIdentify){
+      var result = _InternalRun(`return ${code}`);
+    }else {
+      var result = _InternalRun(code);
+    }
+    if ((result !== undefined)&&(!isIdentify)) { throw "The script in sandbox cannot return a value."; }
     return result;
   };
   return {
