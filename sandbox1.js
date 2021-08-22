@@ -37,6 +37,9 @@ function sandbox(sandboxParent = null) {
         throw new ReferenceError(`${key} is not defined`);
       }
       var result = obj[key];
+      if (Blacklist.has(result)) {
+        throw `The access to ${key} has blocked.`;
+      }
       if (typeof result === "object") {
         return TrapObject(obj[key]);
       }
@@ -46,8 +49,6 @@ function sandbox(sandboxParent = null) {
       if (redirects.has(value)) {
         obj[key] = redirects.get(value);
         return true;
-      } else if (Blacklist.has(obj[key])) {
-        throw `The access to ${key} has blocked.`;
       } else {
         if (typeof value === "object") {
           Object.keys(value).forEach(function (e) {
@@ -75,46 +76,29 @@ function sandbox(sandboxParent = null) {
   var Blacklist = new Set();
   if (window) { redirects.set(window, FakedGlobal) }
   var _InternalRun = function (code) {
-    var BackupFunctionConstruction=Function.prototype.constructor;
-    Function.prototype.constructor=redirects.get(Function);
-    try{
-      var result=Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal);
-    }catch(e){
-      Function.prototype.constructor=BackupFunctionConstruction;
+    var BackupFunctionConstruction = Function.prototype.constructor;
+    Function.prototype.constructor = redirects.get(Function);
+    try {
+      var result = Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal);
+    } catch (e) {
+      Function.prototype.constructor = BackupFunctionConstruction;
       throw e;
     }
-    Function.prototype.constructor=BackupFunctionConstruction;
+    Function.prototype.constructor = BackupFunctionConstruction;
     return result;
   }
   var SandboxFunction = function (code = "") {
-    var key = code.replaceAll(" ", "").replaceAll("\n", ""), isIdentify = true;
-    var invaildChars = "!@#$%^&*+\"\\\':;?/><, \n".split("")
-    invaildChars.forEach(e => { if (key.includes(e)) { isIdentify = false } });
-    if (!isNaN(parseInt(key[0]))) { isIdentify = false }
-    var keySplit = key.split("."), current = FakedGlobal;
-    if (keySplit.length > 1 && isIdentify) {
-      keySplit.forEach(e => {
-        if (current[e] === undefined) throw "Read property based on undefined";
-        current = current[e];
-      })
-      return current;
-    } else {
-      if (key in context) {
-        return FakedGlobal[key];
-      }
-    }
     try {
       Function(code);
     } catch (error) {
       errors.push(error);
       throw error;
     }
-    if (isIdentify) {
+    try {
       var result = _InternalRun(`return ${code}`);
-    } else {
+    } catch {
       var result = _InternalRun(code);
     }
-    if ((result !== undefined) && (!isIdentify)) { throw "The script in sandbox cannot return a value."; }
     return result;
   };
   return {
