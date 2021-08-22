@@ -75,7 +75,16 @@ function sandbox(sandboxParent = null) {
   var Blacklist = new Set();
   if (window) { redirects.set(window, FakedGlobal) }
   var _InternalRun = function (code) {
-    return Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal);
+    var BackupFunctionConstruction=Function.prototype.constructor;
+    Function.prototype.constructor=redirects.get(Function);
+    try{
+      var result=Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal);
+    }catch(e){
+      Function.prototype.constructor=BackupFunctionConstruction;
+      throw e;
+    }
+    Function.prototype.constructor=BackupFunctionConstruction;
+    return result;
   }
   var SandboxFunction = function (code = "") {
     var key = code.replaceAll(" ", "").replaceAll("\n", ""), isIdentify = true;
