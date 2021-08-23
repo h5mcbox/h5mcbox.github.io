@@ -1,14 +1,16 @@
 function sandbox(sandboxParent = null) {
   var context = Object.create(sandboxParent), errors = [];
-  var DetectedObjects = [], ObjectContext = new WeakMap();
+  var DetectedObjects = [], ObjectContext = new WeakMap(), TrapedObjects = new WeakMap();
   var TrapObject = function TrapObject(object) {
-    return new Proxy(object, {
+    if (TrapedObjects.has(object)) return TrapedObjects.get(object)
+    if (!(typeof object === "object" || typeof object === "function")) throw "The target must be an object or an function.";
+    var result = new Proxy(object, {
       get(obj, key) {
         if (redirects.has(obj[key])) {
           return redirects.get(obj[key]);
         } else if (Blacklist.has(obj[key])) {
           throw `The access to ${key} has blocked.`;
-        } else if (typeof obj[key] === "object") {
+        } else if (typeof obj[key] === "object" || typeof obj[key] === "function") {
           return TrapObject(obj[key]);
         }
         if (ObjectContext.has(obj)) {
@@ -24,7 +26,9 @@ function sandbox(sandboxParent = null) {
         ObjectContext.get(obj)[key] = value;
         return true;
       }
-    })
+    });
+    TrapedObjects.set(object, result);
+    return result;
   }
   var FakedGlobal = new Proxy(context, {
     get(obj, key) {
@@ -40,17 +44,21 @@ function sandbox(sandboxParent = null) {
       if (Blacklist.has(result)) {
         throw `The access to ${key} has blocked.`;
       }
-      if (typeof result === "object") {
+      if (typeof result === "object" || typeof result === "function") {
         return TrapObject(obj[key]);
       }
       return obj[key];
     },
     set: function _set(obj, key, value) {
+      if (TrapedObjects.has(value)) {
+        obj[key] = value;
+        return true;
+      }
       if (redirects.has(value)) {
         obj[key] = redirects.get(value);
         return true;
       } else {
-        if (typeof value === "object") {
+        if (typeof value === "object" || typeof value === "function") {
           Object.keys(value).forEach(function (e) {
             var _value = value[e];
             if (!DetectedObjects.includes(_value)) {
@@ -141,10 +149,12 @@ function sandbox(sandboxParent = null) {
       errors.push(error);
       throw error;
     }
+    var result;
     try {
-      var result = _InternalRun(`return ${code}`);
-    } catch {
-      var result = _InternalRun(code);
+      result = _InternalRun(`return ${code}`);
+    } catch (error) {
+      if (!error.message.startsWith("Unexpected token")) { throw error; }
+      result = _InternalRun(code);
     }
     return result;
   };
