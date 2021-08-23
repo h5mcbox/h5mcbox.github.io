@@ -81,6 +81,7 @@ function sandbox(sandboxParent = null) {
       return Function("InternalRun", "code", ...args, "return InternalRun(code)").bind(FakedGlobal, _InternalRun, code)
     }]
   ]);
+  redirects.get(Function).prototype = Function.prototype;
   if (window) { redirects.set(window, FakedGlobal) }
   var Blacklist = new Set();
   var BackupPrototypes = new Map();
