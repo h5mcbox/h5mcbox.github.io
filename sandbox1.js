@@ -75,16 +75,39 @@ function sandbox(sandboxParent = null) {
   ]);
   var Blacklist = new Set();
   if (window) { redirects.set(window, FakedGlobal) }
+  var BackupPrototypes = new Map();
+  function BackupPrototype(obj) {
+    if (!BackupPrototypes.has(obj)) BackupPrototypes.set(obj, {});
+    Reflect.ownKeys(obj.prototype).forEach(function (e) {
+      if (backupBlacklist.includes(e)) return false;
+      BackupPrototypes.get(obj)[e] = obj.prototype[e];
+    });
+  }
+  function RestorePrototype(obj) {
+    if (!BackupPrototypes.has(obj)) return false;
+    var Prototype = BackupPrototypes.get(obj);
+    Object.keys(Prototype).forEach(function (e) {
+      if (backupBlacklist.includes(e)) return false;
+      obj.prototype[e] = Prototype[e];
+    });
+  }
+  var backupBlacklist = ["caller", "callee", "arguments"]
   var _InternalRun = function (code) {
-    var BackupFunctionConstruction = Function.prototype.constructor;
+    BackupPrototype(Function);
+    BackupPrototype(Array);
+    BackupPrototype(Function);
     Function.prototype.constructor = redirects.get(Function);
     try {
       var result = Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal);
     } catch (e) {
-      Function.prototype.constructor = BackupFunctionConstruction;
+      RestorePrototype(Function);
+      RestorePrototype(Array);
+      RestorePrototype(Function);
       throw e;
     }
-    Function.prototype.constructor = BackupFunctionConstruction;
+    RestorePrototype(Function);
+    RestorePrototype(Array);
+    RestorePrototype(Function);
     return result;
   }
   var SandboxFunction = function (code = "") {
