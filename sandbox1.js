@@ -73,18 +73,65 @@ function sandbox(sandboxParent = null) {
       return Function("InternalRun", "code", ...args, "InternalRun(code)").bind(FakedGlobal, _InternalRun, code)
     }]
   ]);
-  var Blacklist = new Set();
   if (window) { redirects.set(window, FakedGlobal) }
+  var Blacklist = new Set();
+  var BackupPrototypes = new Map();
+  var backupBlacklist = ["caller", "callee", "arguments"];
+  var OriginFunctionCall = Function.prototype.call;
+  var OriginFunctionApply = Function.prototype.apply;
+  var OriginArrayIncludes = addCallAndApply(Array.prototype.includes);
+  var OriginArrayForEach = addCallAndApply(Array.prototype.forEach);
+  function addCallAndApply(target) {
+    if (typeof target !== "function") { throw "The target is not a function"; }
+    return new Proxy(target, {
+      get(obj, key) {
+        if (key === "call") return OriginFunctionCall;
+        if (key === "apply") return OriginFunctionApply;
+        return obj[key];
+      }
+    })
+  }
+  function BackupPrototype(obj) {
+    BackupPrototypes.set(obj, {});
+    OriginArrayForEach.call(Reflect.ownKeys(obj.prototype), function (e) {
+      if (backupBlacklist.includes(e)) return false;
+      if (typeof obj.prototype[e] === "symbol") { return false; }
+      BackupPrototypes.get(obj)[e] = obj.prototype[e];
+    });
+    BackupPrototypes.get(obj)[Symbol.iterator] = obj.prototype[Symbol.iterator];
+  }
+  function RestorePrototype(obj) {
+    if (!BackupPrototypes.has(obj)) return false;
+    var Prototype = BackupPrototypes.get(obj);
+    var includesInBlacklist = (arg) => OriginArrayIncludes.call(backupBlacklist, arg);
+    OriginArrayForEach.call(Reflect.ownKeys(obj.prototype), function (e) {
+      if (includesInBlacklist(e)) return false;
+      delete obj.prototype[e]
+    });
+    OriginArrayForEach.call(Object.keys(Prototype), function (e) {
+      if (includesInBlacklist(e)) return false;
+      if (typeof Prototype[e] === "symbol") { return false; }
+      obj.prototype[e] = Prototype[e];
+    });
+    obj.prototype[Symbol.iterator] = BackupPrototypes.get(obj)[Symbol.iterator];
+    BackupPrototypes.delete(obj);
+  }
   var _InternalRun = function (code) {
-    var BackupFunctionConstructor = Function.prototype.constructor;
+    BackupPrototype(Function);
+    BackupPrototype(Array);
+    BackupPrototype(Function);
     Function.prototype.constructor = redirects.get(Function);
     try {
       var result = Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal);
     } catch (e) {
-      Function.prototype.constructor = BackupFunctionConstructor;
+      RestorePrototype(Function);
+      RestorePrototype(Array);
+      RestorePrototype(Function);
       throw e;
     }
-    Function.prototype.constructor = BackupFunctionConstructor;
+    RestorePrototype(Function);
+    RestorePrototype(Array);
+    RestorePrototype(Function);
     return result;
   }
   var SandboxFunction = function (code = "") {
