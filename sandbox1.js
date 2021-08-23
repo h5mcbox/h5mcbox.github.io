@@ -70,7 +70,7 @@ function sandbox(sandboxParent = null) {
   var redirects = new Map([
     [Function, function (...args) {
       var code = args.pop();
-      return Function("InternalRun", "code", ...args, "InternalRun(code)").bind(FakedGlobal, _InternalRun, code)
+      return Function("InternalRun", "code", ...args, "return InternalRun(code)").bind(FakedGlobal, _InternalRun, code)
     }]
   ]);
   if (window) { redirects.set(window, FakedGlobal) }
@@ -89,7 +89,7 @@ function sandbox(sandboxParent = null) {
         if (key === "apply") return OriginFunctionApply;
         return obj[key];
       }
-    })
+    });
   }
   function BackupPrototype(obj) {
     BackupPrototypes.set(obj, {});
