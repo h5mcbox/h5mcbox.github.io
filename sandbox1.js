@@ -92,7 +92,8 @@ function sandbox(sandboxParent = null) {
     }]
   ]);
   redirects.get(Function).prototype = Function.prototype;
-  if (window) { redirects.set(window, FakedGlobal) }
+  if (typeof window !== "undefined") { redirects.set(window, FakedGlobal); }
+  else if (isNODEJS) { redirects.set(global, FakedGlobal); }
   var Blacklist = new Set();
   var BackupPrototypes = new Map();
   var backupBlacklist = ["caller", "callee", "arguments"];
