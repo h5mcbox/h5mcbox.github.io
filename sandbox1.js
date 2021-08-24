@@ -37,6 +37,11 @@ function sandbox(sandboxParent = null) {
       if (typeof key !== "string") {
         return undefined;
       }
+      if (readOnce.has(key)) {
+        var result = readOnce.get(key);
+        readOnce.delete(key);
+        return result;
+      }
       if (!(key in obj)) {
         throw new ReferenceError(`${key} is not defined`);
       }
@@ -91,6 +96,7 @@ function sandbox(sandboxParent = null) {
       return OriginSetInterval(_InternalRun, delay, code, ...args);
     }]
   ]);
+  var readOnce = new Map();
   redirects.get(Function).prototype = Function.prototype;
   if (typeof window !== "undefined") { redirects.set(window, FakedGlobal); }
   else if (isNODEJS) { redirects.set(global, FakedGlobal); }
@@ -146,7 +152,9 @@ function sandbox(sandboxParent = null) {
         if (funcargs.length !== 0) throw "Eval string needn't arguments.";
         var result = Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal);
       } else if (typeof code === "function") {
-        var result = Function("errors", "proxy", "code", "args", `try{with(proxy){;code(...args);}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal, code, funcargs);
+        readOnce.set("TempCode", code);
+        readOnce.set("TempArgs", funcargs);
+        var result = Function("errors", "proxy", `try{with(proxy){;TempCode(...TempArgs);}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal);
       } else {
         throw EvalError("The target is not evalable.");
       }
@@ -161,7 +169,7 @@ function sandbox(sandboxParent = null) {
     RestorePrototype(Function);
     return result;
   }
-  var SandboxFunction = function (code = "") {
+  var SandboxFunction = function (code = "", noReturn = false) {
     try {
       Function(code);
     } catch (error) {
@@ -170,9 +178,15 @@ function sandbox(sandboxParent = null) {
     }
     var result;
     try {
+      if (noReturn) throw "";
       result = _InternalRun(`return ${code}`);
     } catch (error) {
-      if (!error.message.startsWith("Unexpected token")) { throw error; }
+      if (error instanceof SyntaxError) {
+        if (error.message.startsWith("Unexpected token")) {
+          throw error;
+        }
+      }
+      if (!(typeof error === "string"||noReturn)) throw error;
       result = _InternalRun(code);
     }
     return result;
