@@ -75,10 +75,20 @@ function sandbox(sandboxParent = null) {
       return true;
     }
   });
+  var isNODEJS = Boolean(typeof module !== "undefined");
+  var _global = isNODEJS ? global : window;
   var redirects = new Map([
     [Function, function (...args) {
       var code = args.pop();
       return Function("InternalRun", "code", ...args, "return InternalRun(code)").bind(FakedGlobal, _InternalRun, code)
+    }],
+    [setTimeout, function (code, delay, ...args) {
+      var OriginSetTimeout = setTimeout.bind(_global);
+      return OriginSetTimeout(_InternalRun, delay, code, ...args);
+    }],
+    [setInterval, function (code, delay, ...args) {
+      var OriginSetInterval = setInterval.bind(_global);
+      return OriginSetInterval(_InternalRun, delay, code, ...args);
     }]
   ]);
   redirects.get(Function).prototype = Function.prototype;
@@ -125,13 +135,20 @@ function sandbox(sandboxParent = null) {
     obj.prototype[Symbol.iterator] = BackupPrototypes.get(obj)[Symbol.iterator];
     BackupPrototypes.delete(obj);
   }
-  var _InternalRun = function (code) {
+  var _InternalRun = function (code, ...funcargs) {
     BackupPrototype(Function);
     BackupPrototype(Array);
     BackupPrototype(Function);
     Function.prototype.constructor = redirects.get(Function);
     try {
-      var result = Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal);
+      if (typeof code === "string") {
+        if (funcargs.length !== 0) throw "Eval string needn't arguments.";
+        var result = Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal);
+      } else if (typeof code === "function") {
+        var result = Function("errors", "proxy", "code", "args", `try{with(proxy){;code(...args);}}catch(error){errors.push(error);throw error;}`).bind(FakedGlobal)(errors, FakedGlobal, code, funcargs);
+      } else {
+        throw EvalError("The target is not evalable.");
+      }
     } catch (e) {
       RestorePrototype(Function);
       RestorePrototype(Array);
