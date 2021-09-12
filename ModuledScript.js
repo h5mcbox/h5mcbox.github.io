@@ -2,16 +2,31 @@ class ModuledScript{
   #ModuleStorage={};
   loadedModules={};
   API={};
-  #unwritable=["importModule"];
   #depends={};
-  APIProxy=(depends,unwritable)=>new Proxy(this.API,{
+  APIProxy=(depends,unwritable=[],deletedProperty={})=>new Proxy(this.API,{
     get(o,k){
+      if(Reflect.has(deletedProperty,k))return undefined;
       if(Reflect.has(depends,k)&&!o[k])return o[k]=o.importModule(depends[k]);
       return o[k];
     },
     set(o,k,v){
       if(unwritable.includes(k))return false;
+      if(Reflect.has(deletedProperty,k))delete deletedProperty[k];
       return Boolean(o[k]=v);
+    },
+    has(o,k){
+      if(Reflect.has(deletedProperty,k))return false;
+      if(Reflect.has(depends,k)&&!o[k])return o[k]=o.importModule(depends[k]);
+      return Boolean(Reflect.has(o,k));
+    },
+    deleteProperty(o,k){
+      deletedProperty[k]=true;
+      if(unwritable.includes(k))return false;
+      return Boolean(Reflect.deleteProperty(o,k));
+    },
+    ownKeys(o){
+      var keys=Reflect.ownKeys(o);
+      return keys.filter(e=>!deletedProperty[e]);
     }
   });
   Module=class{exports={}};
@@ -40,7 +55,7 @@ class ModuledScript{
     this.#ModuleStorage=_ModuleStorage;
     this.#depends=_depends;
     this.API.importModule=this.importModule.bind(this);
-    this.APIProxy=this.APIProxy(this.#depends,this.#unwritable);
+    this.APIProxy=this.APIProxy(this.#depends,["importModule"],{});
     return this;
   }
 }
