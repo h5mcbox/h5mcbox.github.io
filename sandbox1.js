@@ -149,6 +149,7 @@ function sandbox(sandboxParent = null) {
     BackupPrototype(Function);
     BackupPrototype(GeneratorFunction);
     Function.prototype.constructor = redirects.get(Function);
+    delete GeneratorFunction.prototype.constructor;
     GeneratorFunction.prototype.constructor = null;
     try {
       if (typeof code === "string") {
