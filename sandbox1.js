@@ -1,4 +1,5 @@
 function sandbox(sandboxParent = null) {
+  var GeneratorFunction=(function*(){}).constructor;
   var context = Object.create(sandboxParent), errors = [];
   var DetectedObjects = [], ObjectContext = new WeakMap(), TrapedObjects = new WeakMap();
   var TrapObject = function TrapObject(object) {
@@ -146,7 +147,9 @@ function sandbox(sandboxParent = null) {
     BackupPrototype(Function);
     BackupPrototype(Array);
     BackupPrototype(Function);
+    BackupPrototype(GeneratorFunction);
     Function.prototype.constructor = redirects.get(Function);
+    GeneratorFunction.prototype.constructor = null;
     try {
       if (typeof code === "string") {
         if (funcargs.length !== 0) throw "Eval string needn't arguments.";
@@ -162,11 +165,13 @@ function sandbox(sandboxParent = null) {
       RestorePrototype(Function);
       RestorePrototype(Array);
       RestorePrototype(Function);
+      RestorePrototype(GeneratorFunction);
       throw e;
     }
     RestorePrototype(Function);
     RestorePrototype(Array);
     RestorePrototype(Function);
+    RestorePrototype(GeneratorFunction);
     return result;
   }
   var SandboxFunction = function (code = "", noReturn = false) {
