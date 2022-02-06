@@ -123,7 +123,7 @@ function sandbox(sandboxParent = null) {
     OriginArrayForEach.call(Reflect.ownKeys(obj.prototype), function (e) {
       if (backupBlacklist.includes(e)) return false;
       if (typeof obj.prototype[e] === "symbol") { return false; }
-      BackupPrototypes.get(obj)[e] = obj.prototype[e];
+      Reflect.defineProperty(BackupPrototypes.get(obj),e,Object.getOwnPropertyDescriptor(obj.prototype,e));
     });
     BackupPrototypes.get(obj)[Symbol.iterator] = obj.prototype[Symbol.iterator];
   }
@@ -135,10 +135,13 @@ function sandbox(sandboxParent = null) {
       if (includesInBlacklist(e)) return false;
       delete obj.prototype[e]
     });
-    OriginArrayForEach.call(Object.keys(Prototype), function (e) {
+    OriginArrayForEach.call(Reflect.ownKeys(Prototype), function (e) {
       if (includesInBlacklist(e)) return false;
       if (typeof Prototype[e] === "symbol") { return false; }
-      obj.prototype[e] = Prototype[e];
+      try{
+        //obj.prototype[e] = Prototype[e];
+        Reflect.defineProperty(obj.prototype,e,Object.getOwnPropertyDescriptor(BackupPrototypes.get(obj),e));
+      }
     });
     obj.prototype[Symbol.iterator] = BackupPrototypes.get(obj)[Symbol.iterator];
     BackupPrototypes.delete(obj);
@@ -146,7 +149,7 @@ function sandbox(sandboxParent = null) {
   var _InternalRun = function (code, ...funcargs) {
     BackupPrototype(Function);
     BackupPrototype(Array);
-    BackupPrototype(Function);
+    //BackupPrototype(Function);
     BackupPrototype(GeneratorFunction);
     Function.prototype.constructor = redirects.get(Function);
     delete GeneratorFunction.prototype.constructor;
@@ -165,13 +168,13 @@ function sandbox(sandboxParent = null) {
     } catch (e) {
       RestorePrototype(Function);
       RestorePrototype(Array);
-      RestorePrototype(Function);
+      //RestorePrototype(Function);
       RestorePrototype(GeneratorFunction);
       throw e;
     }
     RestorePrototype(Function);
     RestorePrototype(Array);
-    RestorePrototype(Function);
+    //RestorePrototype(Function);
     RestorePrototype(GeneratorFunction);
     return result;
   }
