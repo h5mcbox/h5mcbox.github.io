@@ -1,7 +1,7 @@
 function sandbox(sandboxParent = null) {
   var GeneratorFunction=(function*(){}).constructor;
   var context = Object.create(sandboxParent), errors = [];
-  var DetectedObjects = [], ObjectContext = new WeakMap(), TrapedObjects = new WeakMap();
+  var DetectedObjects = [], ObjectContext = new WeakMap(), TrapedObjects = new WeakMap(), UntracedObjects = new WeakSet();
   var TrapObject = function TrapObject(object) {
     if (TrapedObjects.has(object)) return TrapedObjects.get(object)
     if (!(typeof object === "object" || typeof object === "function")) throw "The target must be an object or an function.";
@@ -11,7 +11,7 @@ function sandbox(sandboxParent = null) {
           return redirects.get(obj[key]);
         } else if (Blacklist.has(obj[key])) {
           throw `The access to ${key} has blocked.`;
-        } else if (typeof obj[key] === "object" || typeof obj[key] === "function") {
+        } else if ((typeof obj[key] === "object" || typeof obj[key] === "function")&&(!UntracedObjects.has(obj[key]))) {
           return TrapObject(obj[key]);
         }
         if (ObjectContext.has(obj)) {
@@ -207,6 +207,7 @@ function sandbox(sandboxParent = null) {
     ObjectContext,
     redirects,
     Blacklist,
+    UntracedObjects,
     errors
   };
 }
