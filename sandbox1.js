@@ -50,7 +50,7 @@ function sandbox(sandboxParent = null) {
       if (Blacklist.has(result)) {
         throw `The access to ${key} has blocked.`;
       }
-      if (typeof result === "object" || typeof result === "function") {
+      if ((typeof result === "object" || typeof result === "function")&&(!UntracedObjects.has(obj[key]))) {
         return TrapObject(obj[key]);
       }
       return obj[key];
