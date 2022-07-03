@@ -9,7 +9,11 @@
   function createContainer(containerParent = null) {
     var GeneratorFunction = (function* () { }).constructor;
     var context = Object.create(containerParent), errors = [];
-    var DetectedObjects = [], ObjectContext = new WeakMap(), TrapedObjects = new WeakMap(), UntracedObjects = new WeakSet();
+    var DetectedObjects = [],
+      ObjectContext = new WeakMap(),
+      WhiteOutMap = new WeakMap(),
+      TrapedObjects = new WeakMap(),
+      UntracedObjects = new WeakSet();
     var customOwnKeys = function ownKeys(o) {
       var result = Reflect.ownKeys(o);
       result = result.filter(e => !(Blacklist.has(e)));
@@ -29,9 +33,15 @@
         get(obj, key) {
           var r1;
           if (ObjectContext.has(obj)) {
-            r1 = Reflect.get(ObjectContext.get(obj), key) || obj[key];
+            r1 = Reflect.get(ObjectContext.get(obj), key) || Reflect.get(obj, key);
           } else {
             r1 = Reflect.get(obj, key);
+          }
+          if (!WhiteOutMap.has(obj)) {
+            WhiteOutMap.set(obj, new Set());
+          }
+          if (WhiteOutMap.get(obj).has(key)) {
+            return undefined;
           }
           if (redirects.has(r1)) {
             return redirects.get(r1);
@@ -46,15 +56,23 @@
           if (!ObjectContext.has(obj)) {
             ObjectContext.set(obj, {});
           }
+          if (!WhiteOutMap.has(obj)) {
+            WhiteOutMap.set(obj, new Set());
+          }
           if (redirects.has(value)) {
             return Reflect.set(obj, key, redirects.get(value));
           }
+          WhiteOutMap.get(obj).delete(key);
           return Reflect.set(ObjectContext.get(obj), key, value);
         },
         defineProperty(o, p, a) {
-          if (!ObjectContext.has(obj)) {
-            ObjectContext.set(obj, {});
+          if (!ObjectContext.has(o)) {
+            ObjectContext.set(o, {});
           }
+          if (!WhiteOutMap.has(o)) {
+            WhiteOutMap.set(o, new Set());
+          }
+          WhiteOutMap.get(o).delete(p);
           return Reflect.defineProperty(ObjectContext.get(o), p, a);
         },
         getOwnPropertyDescriptor(o, p) {
@@ -64,7 +82,13 @@
           } else {
             r1 = Reflect.getOwnPropertyDescriptor(o, p);
           }
-          if(!r1){return r1;}
+          if (!WhiteOutMap.has(o)) {
+            WhiteOutMap.set(o, new Set());
+          }
+          if (WhiteOutMap.get(o).has(p)) {
+            return undefined;
+          }
+          if (!r1) { return r1; }
           if ("value" in r1) {
             if (redirects.has(r1.value)) {
               r1.value = redirects.get(r1.value);
@@ -76,6 +100,50 @@
               return r1;
             }
           }
+          return r1;
+        },
+        deleteProperty(o, p) {
+          if (!ObjectContext.has(o)) {
+            ObjectContext.set(o, {});
+          }
+          if (!WhiteOutMap.has(o)) {
+            WhiteOutMap.set(o, new Set());
+          }
+          if (Reflect.has(ObjectContext.get(o), p)) {
+            return Reflect.deleteProperty(ObjectContext.get(o), p);
+          } else {
+            let descriptor = Reflect.getOwnPropertyDescriptor(o, p) || {};
+            if (descriptor.configurable) {
+              WhiteOutMap.get(o).add(p);
+              return true;
+            } else {
+              return false;
+            }
+          }
+        },
+        has(o, p) {
+          var r1, r2;
+          if (ObjectContext.has(o)) {
+            r1 = Reflect.has(ObjectContext.get(o), p) || Reflect.has(o, p);
+            r2 = Reflect.get(ObjectContext.get(o), p) || Reflect.get(o, p);
+          } else {
+            r1 = Reflect.has(o, p);
+            r2 = Reflect.get(o, p);
+          }
+          if (!WhiteOutMap.has(o)) {
+            WhiteOutMap.set(o, new Set());
+          }
+          if (WhiteOutMap.get(o).has(p)) {
+            return false;
+          }
+          if (redirects.has(r2)) {
+            return true;
+          } else if (Blacklist.has(r1)) {
+            return false;
+          } else if ((typeof r2 === "object" || typeof r2 === "function") && (!UntracedObjects.has(r2))) {
+            TrapObject(r2);
+            return true;
+          };
           return r1;
         },
         ownKeys: customOwnKeys
@@ -148,12 +216,12 @@
             a.value = redirects.get(value);
             return Reflect.defineProperty(o, p, a);
           } else {
-            if (typeof value === "object" || typeof value === "function") {
-              Object.keys(value).forEach(function (e) {
-                var _value = value[e];
+            if (typeof a.value === "object" || typeof a.value === "function") {
+              Object.keys(a.value).forEach(function (e) {
+                var _value = a.value[e];
                 if (!DetectedObjects.includes(_value)) {
                   DetectedObjects.push(_value);
-                  return _defineProperty(value, e, _value);
+                  return _defineProperty(a.value, e, Reflect.getOwnPropertyDescriptor(a.value, e));
                 }
               });
             }
@@ -176,7 +244,7 @@
           return { value: result, writable: false, enumerable: true, configurable: false };
         }
         r1 = Reflect.getOwnPropertyDescriptor(o, p);
-        if(!r1){return r1;}
+        if (!r1) { return r1; }
         if ("value" in r1) {
           if (Blacklist.has(r1.value)) {
             throw `The access to ${p} has blocked.`;
