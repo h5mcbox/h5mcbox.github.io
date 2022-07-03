@@ -1,14 +1,14 @@
-(function UMDLoader(SandboxFunction) {
+(function UMDLoader(createContainer) {
   const isNode = !("window" in globalThis);
   if (isNode) {
-    module.exports = SandboxFunction;
+    module.exports = createContainer;
   } else {
-    window.CreateSandbox = SandboxFunction;
+    window.createContainer = createContainer;
   }
 })(
-  function CreateSandbox(sandboxParent = null) {
+  function createContainer(containerParent = null) {
     var GeneratorFunction = (function* () { }).constructor;
-    var context = Object.create(sandboxParent), errors = [];
+    var context = Object.create(containerParent), errors = [];
     var DetectedObjects = [], ObjectContext = new WeakMap(), TrapedObjects = new WeakMap(), UntracedObjects = new WeakSet();
     var TrapObject = function TrapObject(object) {
       if (TrapedObjects.has(object)) return TrapedObjects.get(object)
@@ -141,7 +141,7 @@
       var includesInBlacklist = (arg) => OriginArrayIncludes.call(backupBlacklist, arg);
       OriginArrayForEach.call(Reflect.ownKeys(obj.prototype), function (e) {
         if (includesInBlacklist(e)) return false;
-        delete obj.prototype[e]
+        delete obj.prototype[e];
       });
       OriginArrayForEach.call(Reflect.ownKeys(Prototype), function (e) {
         if (includesInBlacklist(e)) return false;
@@ -180,7 +180,7 @@
       RestorePrototype(GeneratorFunction);
       return result;
     }
-    var SandboxFunction = function (code = "", noReturn = false) {
+    var ContainerFunction = function (code = "", noReturn = false) {
       try {
         Function(code);
       } catch (error) {
@@ -203,7 +203,7 @@
       return result;
     };
     return {
-      RunInContainer: SandboxFunction,
+      runInContainer: ContainerFunction,
       ContainerGlobal,
       context,
       ObjectContext,
