@@ -7,18 +7,18 @@
   }
 })(
   function createContainer(containerParent = null) {
-    var GeneratorFunction = (function* () { }).constructor;
-    var context = Object.create(containerParent), errors = [];
-    var DetectedObjects = [],
+    let GeneratorFunction = (function* () { }).constructor;
+    let context = Object.create(containerParent), errors = [];
+    let DetectedObjects = [],
       ObjectContext = new WeakMap(),
       WhiteOutMap = new WeakMap(),
       TrapedObjects = new WeakMap(),
       UntracedObjects = new WeakSet();
-    var customOwnKeys = function ownKeys(o) {
-      var result = Reflect.ownKeys(o);
+    let customOwnKeys = function ownKeys(o) {
+      let result = Reflect.ownKeys(o);
       result = result.filter(e => !(Blacklist.has(e)));
       if (ObjectContext.has(o)) {
-        var resultSet = new Set(result);
+        let resultSet = new Set(result);
         Object.keys(ObjectContext.get(o)).forEach(e => {
           resultSet.add(e);
         });
@@ -26,12 +26,12 @@
       }
       return result;
     }
-    var TrapObject = function TrapObject(object) {
+    let TrapObject = function TrapObject(object) {
       if (TrapedObjects.has(object)) return TrapedObjects.get(object)
       if (!(typeof object === "object" || typeof object === "function")) throw "The target must be an object or an function.";
-      var result = new Proxy(object, {
+      let result = new Proxy(object, {
         get(obj, key) {
-          var r1;
+          let r1;
           if (ObjectContext.has(obj)) {
             r1 = Reflect.get(ObjectContext.get(obj), key) || Reflect.get(obj, key);
           } else {
@@ -76,7 +76,7 @@
           return Reflect.defineProperty(ObjectContext.get(o), p, a);
         },
         getOwnPropertyDescriptor(o, p) {
-          var r1;
+          let r1;
           if (ObjectContext.has(o)) {
             r1 = Reflect.getOwnPropertyDescriptor(ObjectContext.get(o), p) || Reflect.getOwnPropertyDescriptor(o, p);
           } else {
@@ -122,7 +122,7 @@
           }
         },
         has(o, p) {
-          var r1, r2;
+          let r1, r2;
           if (ObjectContext.has(o)) {
             r1 = Reflect.has(ObjectContext.get(o), p) || Reflect.has(o, p);
             r2 = Reflect.get(ObjectContext.get(o), p) || Reflect.get(o, p);
@@ -151,7 +151,7 @@
       TrapedObjects.set(object, result);
       return result;
     }
-    var ContainerGlobal = new Proxy(context, {
+    let ContainerGlobal = new Proxy(context, {
       get(obj, key) {
         if (key === "undefined") { return undefined; }
         if (key === "null") { return null; }
@@ -162,12 +162,12 @@
           return undefined;
         }
         if (readOnce.has(key)) {
-          var result = readOnce.get(key);
+          let result = readOnce.get(key);
           readOnce.delete(key);
           return result;
         }
         if (!(key in obj)) {
-          var errmsg;
+          let errmsg;
           if (typeof key === "symbol") {
             errmsg = `Symbol(${key.description}) is not defined`;
           } else {
@@ -175,7 +175,7 @@
           }
           throw new ReferenceError(errmsg);
         }
-        var result = Reflect.get(obj, key);
+        let result = Reflect.get(obj, key);
         if (Blacklist.has(result)) {
           throw `The access to ${key} has blocked.`;
         }
@@ -193,7 +193,7 @@
         } else {
           if ((typeof value === "object" || typeof value === "function") && value) {
             Reflect.ownKeys(value).forEach(function (e) {
-              var _value = value[e];
+              let _value = value[e];
               if (!DetectedObjects.includes(_value)) {
                 DetectedObjects.push(_value);
                 return _set(value, e, _value);
@@ -218,7 +218,7 @@
           } else {
             if ((typeof a.value === "object" || typeof a.value === "function") & a.value) {
               Reflect.ownKeys(a.value).forEach(function (e) {
-                var _value = a.value[e];
+                let _value = a.value[e];
                 if (!DetectedObjects.includes(_value)) {
                   DetectedObjects.push(_value);
                   return _defineProperty(a.value, e, Reflect.getOwnPropertyDescriptor(a.value, e));
@@ -232,14 +232,14 @@
         }
       },
       getOwnPropertyDescriptor(o, p) {
-        var r1;
+        let r1;
         if (p === "undefined") { return { value: undefined, writable: false, enumerable: false, configurable: false } }
         if (p === "null") { return { value: null, writable: false, enumerable: false, configurable: false } }
         if ((typeof p !== "string") && (typeof p !== "symbol")) {
           return undefined;
         }
         if (readOnce.has(p)) {
-          var result = readOnce.get(p);
+          let result = readOnce.get(p);
           readOnce.delete(p);
           return { value: result, writable: false, enumerable: true, configurable: false };
         }
@@ -258,13 +258,13 @@
       },
       ownKeys: customOwnKeys
     });
-    var isNODEJS = Boolean(typeof module !== "undefined");
-    var _global = isNODEJS ? global : window;
-    var TimeoutTimer = new Map(), IntervalTimer = new Map();
-    var TotalTimeoutTimers = 0, TotalIntervalTimers = 0;
-    var redirects = new Map([
+    let isNODEJS = Boolean(typeof module !== "undefined");
+    let _global = isNODEJS ? global : window;
+    let TimeoutTimer = new Map(), IntervalTimer = new Map();
+    let TotalTimeoutTimers = 0, TotalIntervalTimers = 0;
+    let redirects = new Map([
       [Function, function (...args) {
-        var code = args.pop();
+        let code = args.pop();
         return Function("InternalRun", "code", ...args, "return InternalRun(code)").bind(ContainerGlobal, _InternalRun, code)
       }],
       [setTimeout, function (code, delay, ...args) {
@@ -288,17 +288,23 @@
         return clearInterval(IntervalID);
       }]
     ]);
-    var readOnce = new Map();
+    function clearTimers() {
+      TimeoutTimer.forEach((value, key) => { clearTimeout(value) });
+      IntervalTimer.forEach((value, key) => { clearInterval(value) });
+      TimeoutTimer.clear();
+      IntervalTimer.clear();
+    }
+    let readOnce = new Map();
     redirects.get(Function).prototype = Function.prototype;
     if (typeof window !== "undefined") { redirects.set(window, ContainerGlobal); }
     else if (isNODEJS) { redirects.set(global, ContainerGlobal); }
-    var Blacklist = new Set();
-    var BackupPrototypes = new Map();
-    var backupBlacklist = ["caller", "callee", "arguments"];
-    var OriginFunctionCall = Function.prototype.call;
-    var OriginFunctionApply = Function.prototype.apply;
-    var OriginArrayIncludes = addCallAndApply(Array.prototype.includes);
-    var OriginArrayForEach = addCallAndApply(Array.prototype.forEach);
+    let Blacklist = new Set();
+    let BackupPrototypes = new Map();
+    let backupBlacklist = ["caller", "callee", "arguments"];
+    let OriginFunctionCall = Function.prototype.call;
+    let OriginFunctionApply = Function.prototype.apply;
+    let OriginArrayIncludes = addCallAndApply(Array.prototype.includes);
+    let OriginArrayForEach = addCallAndApply(Array.prototype.forEach);
     function addCallAndApply(target) {
       if (typeof target !== "function") { throw "The target is not a function"; }
       return new Proxy(target, {
@@ -320,8 +326,8 @@
     }
     function RestorePrototype(obj) {
       if (!BackupPrototypes.has(obj)) return false;
-      var Prototype = BackupPrototypes.get(obj);
-      var includesInBlacklist = (arg) => OriginArrayIncludes.call(backupBlacklist, arg);
+      let Prototype = BackupPrototypes.get(obj);
+      let includesInBlacklist = (arg) => OriginArrayIncludes.call(backupBlacklist, arg);
       OriginArrayForEach.call(Reflect.ownKeys(obj.prototype), function (e) {
         if (includesInBlacklist(e)) return false;
         delete obj.prototype[e];
@@ -334,21 +340,22 @@
       obj.prototype[Symbol.iterator] = BackupPrototypes.get(obj)[Symbol.iterator];
       BackupPrototypes.delete(obj);
     }
-    var _InternalRun = function (code, ...funcargs) {
+    let _InternalRun = function (code, ...funcargs) {
       BackupPrototype(Function);
       BackupPrototype(Array);
       BackupPrototype(GeneratorFunction);
       Function.prototype.constructor = redirects.get(Function);
       delete GeneratorFunction.prototype.constructor;
       GeneratorFunction.prototype.constructor = null;
+      let result;
       try {
         if (typeof code === "string") {
           if (funcargs.length !== 0) throw "Eval string needn't arguments.";
-          var result = Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(ContainerGlobal)(errors, ContainerGlobal);
+          result = Function("errors", "proxy", `try{with(proxy){;${code};}}catch(error){errors.push(error);throw error;}`).bind(ContainerGlobal)(errors, ContainerGlobal);
         } else if (typeof code === "function") {
           readOnce.set("TempCode", code);
           readOnce.set("TempArgs", funcargs);
-          var result = Function("errors", "proxy", `try{with(proxy){;TempCode(...TempArgs);}}catch(error){errors.push(error);throw error;}`).bind(ContainerGlobal)(errors, ContainerGlobal);
+          result = Function("errors", "proxy", `try{with(proxy){;TempCode(...TempArgs);}}catch(error){errors.push(error);throw error;}`).bind(ContainerGlobal)(errors, ContainerGlobal);
         } else {
           throw EvalError("The target is not evalable.");
         }
@@ -363,7 +370,7 @@
       RestorePrototype(GeneratorFunction);
       return result;
     }
-    var ContainerFunction = function (code = "") {
+    let ContainerFunction = function (code = "") {
       try {
         Function(code);
       } catch (error) {
@@ -381,7 +388,8 @@
       redirects,
       Blacklist,
       UntracedObjects,
-      errors
+      errors,
+      clearTimers
     };
   }
 );
