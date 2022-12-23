@@ -193,8 +193,13 @@
         } else {
           if ((typeof value === "object" || typeof value === "function") && value) {
             Reflect.ownKeys(value).forEach(function (e) {
-              let _value = value[e];
-              if (!DetectedObjects.includes(_value)) {
+              let _value, skip = false;
+              try {
+                _value = value[e];
+              } catch {
+                skip = true;
+              }
+              if ((!DetectedObjects.includes(_value)) && (!skip)) {
                 DetectedObjects.push(_value);
                 return _set(value, e, _value);
               }
