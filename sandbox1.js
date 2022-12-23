@@ -191,8 +191,8 @@
         if (redirects.has(value)) {
           return Reflect.set(obj, key, redirects.get(value));
         } else {
-          if (typeof value === "object" || typeof value === "function") {
-            Object.keys(value).forEach(function (e) {
+          if ((typeof value === "object" || typeof value === "function") && value) {
+            Reflect.ownKeys(value).forEach(function (e) {
               var _value = value[e];
               if (!DetectedObjects.includes(_value)) {
                 DetectedObjects.push(_value);
@@ -216,8 +216,8 @@
             a.value = redirects.get(value);
             return Reflect.defineProperty(o, p, a);
           } else {
-            if (typeof a.value === "object" || typeof a.value === "function") {
-              Object.keys(a.value).forEach(function (e) {
+            if ((typeof a.value === "object" || typeof a.value === "function") & a.value) {
+              Reflect.ownKeys(a.value).forEach(function (e) {
                 var _value = a.value[e];
                 if (!DetectedObjects.includes(_value)) {
                   DetectedObjects.push(_value);
@@ -260,18 +260,32 @@
     });
     var isNODEJS = Boolean(typeof module !== "undefined");
     var _global = isNODEJS ? global : window;
+    var TimeoutTimer = new Map(), IntervalTimer = new Map();
+    var TotalTimeoutTimers = 0, TotalIntervalTimers = 0;
     var redirects = new Map([
       [Function, function (...args) {
         var code = args.pop();
         return Function("InternalRun", "code", ...args, "return InternalRun(code)").bind(ContainerGlobal, _InternalRun, code)
       }],
       [setTimeout, function (code, delay, ...args) {
-        var OriginSetTimeout = setTimeout.bind(_global);
-        return OriginSetTimeout(_InternalRun, delay, code, ...args);
+        let TimeoutID = setTimeout.call(_global, _InternalRun, delay, code, ...args);
+        TimeoutTimer.set(++TotalTimeoutTimers, TimeoutID);
+        return TotalTimeoutTimers;
       }],
       [setInterval, function (code, delay, ...args) {
-        var OriginSetInterval = setInterval.bind(_global);
-        return OriginSetInterval(_InternalRun, delay, code, ...args);
+        let IntervalID = setInterval.call(_global, _InternalRun, delay, code, ...args);
+        IntervalTimer.set(++TotalIntervalTimers, IntervalID);
+        return TotalIntervalTimers;
+      }],
+      [clearTimeout, function (_TimeoutID) {
+        let TimeoutID = TimeoutTimer.get(_TimeoutID);
+        TimeoutTimer.delete(_TimeoutID);
+        return clearTimeout(TimeoutID);
+      }],
+      [clearInterval, function (_IntervalID) {
+        let IntervalID = IntervalTimer.get(_IntervalID);
+        IntervalTimer.delete(_IntervalID);
+        return clearInterval(IntervalID);
       }]
     ]);
     var readOnce = new Map();
