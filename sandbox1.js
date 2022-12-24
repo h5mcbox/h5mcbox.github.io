@@ -286,8 +286,7 @@
       ownKeys: customOwnKeys
     });
     UntracedObjects.add(ContainerGlobal);
-    let isNODEJS = Boolean(typeof module !== "undefined");
-    let _global = isNODEJS ? global : window;
+    let _global = globalThis;
     let TimeoutTimer = new Map(), IntervalTimer = new Map();
     let TotalTimeoutTimers = 0, TotalIntervalTimers = 0;
     let redirects = new Map([
@@ -324,8 +323,7 @@
     }
     let readOnce = new Map();
     redirects.get(Function).prototype = Function.prototype;
-    if (typeof window !== "undefined") { redirects.set(window, ContainerGlobal); }
-    else if (isNODEJS) { redirects.set(global, ContainerGlobal); }
+    redirects.set(_global, ContainerGlobal);
     let Blacklist = new Set();
     let BackupPrototypes = new Map();
     let backupBlacklist = ["caller", "callee", "arguments"];
