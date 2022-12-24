@@ -29,8 +29,15 @@
     let TrapObject = function TrapObject(object) {
       if (TrapedObjects.has(object)) return TrapedObjects.get(object)
       if (!(typeof object === "object" || typeof object === "function")) throw "The target must be an object or an function.";
-      let result = new Proxy(object, {
+      let blankObject;
+      if (typeof object === "object") {
+        blankObject = {};
+      } else {
+        blankObject = function () { };
+      }
+      let result = new Proxy(blankObject, {
         get(obj, key) {
+          arguments[0] = object;
           let r1;
           if (ObjectContext.has(obj)) {
             r1 = Reflect.get(ObjectContext.get(obj), key) || Reflect.get(obj, key);
@@ -53,6 +60,7 @@
           return r1;
         },
         set(obj, key, value) {
+          arguments[0] = object;
           if (!ObjectContext.has(obj)) {
             ObjectContext.set(obj, {});
           }
@@ -66,6 +74,7 @@
           return Reflect.set(ObjectContext.get(obj), key, value);
         },
         defineProperty(o, p, a) {
+          arguments[0] = object;
           if (!ObjectContext.has(o)) {
             ObjectContext.set(o, {});
           }
@@ -76,6 +85,7 @@
           return Reflect.defineProperty(ObjectContext.get(o), p, a);
         },
         getOwnPropertyDescriptor(o, p) {
+          arguments[0] = object;
           let r1;
           if (ObjectContext.has(o)) {
             r1 = Reflect.getOwnPropertyDescriptor(ObjectContext.get(o), p) || Reflect.getOwnPropertyDescriptor(o, p);
@@ -103,6 +113,7 @@
           return r1;
         },
         deleteProperty(o, p) {
+          arguments[0] = object;
           if (!ObjectContext.has(o)) {
             ObjectContext.set(o, {});
           }
@@ -122,6 +133,7 @@
           }
         },
         has(o, p) {
+          arguments[0] = object;
           let r1, r2;
           if (ObjectContext.has(o)) {
             r1 = Reflect.has(ObjectContext.get(o), p) || Reflect.has(o, p);
@@ -146,7 +158,7 @@
           };
           return r1;
         },
-        ownKeys: customOwnKeys
+        ownKeys: function () { arguments[0] = object; return customOwnKeys.apply(this, arguments) }
       });
       TrapedObjects.set(object, result);
       return result;
@@ -263,6 +275,7 @@
       },
       ownKeys: customOwnKeys
     });
+    UntracedObjects.add(ContainerGlobal);
     let isNODEJS = Boolean(typeof module !== "undefined");
     let _global = isNODEJS ? global : window;
     let TimeoutTimer = new Map(), IntervalTimer = new Map();
