@@ -158,133 +158,152 @@
           };
           return r1;
         },
-        ownKeys: function () { arguments[0] = object; return customOwnKeys.apply(this, arguments) }
+        ownKeys: function () { arguments[0] = object; return customOwnKeys.apply(this, arguments); },
+        preventExtensions: function () { arguments[0] = object; Reflect.preventExtensions.apply(this, arguments); return false; }
       };
-      let result = new Proxy(blankObject, new Proxy({}, {
+      let result = new Proxy(blankObject, genFallbackHandler(handlers, object));
+      TrapedObjects.set(object, result);
+      return result;
+    }
+    function genFallbackHandler(originalHandler, object) {
+      return new Proxy({}, {
         get: function (o, k) {
           function fallbackHandler() {
             arguments[0] = object;
             return Reflect[k].apply(this, arguments);
           }
-          let handler = handlers[k] || fallbackHandler;
+          let handler = originalHandler[k] || fallbackHandler;
           return handler;
         }
-      }));
-      TrapedObjects.set(object, result);
-      return result;
+      })
     }
-    let ContainerGlobal = new Proxy(context, {
-      get(obj, key) {
-        if (key === "undefined") { return undefined; }
-        if (key === "null") { return null; }
-        if ((typeof key !== "string") && (typeof key !== "symbol")) {
-          return undefined;
-        }
-        if (key === Symbol.unscopables) {
-          return undefined;
-        }
-        if (readOnce.has(key)) {
-          let result = readOnce.get(key);
-          readOnce.delete(key);
+    let ContainerGlobal;
+    (function () {
+      let blankObject;
+      if (typeof context === "object") {
+        blankObject = {};
+      } else {
+        blankObject = function () { };
+      }
+      let handlers = {
+        get(obj, key) {
+          arguments[0] = context;
+          if (key === "undefined") { return undefined; }
+          if (key === "null") { return null; }
+          if ((typeof key !== "string") && (typeof key !== "symbol")) {
+            return undefined;
+          }
+          if (key === Symbol.unscopables) {
+            return undefined;
+          }
+          if (readOnce.has(key)) {
+            let result = readOnce.get(key);
+            readOnce.delete(key);
+            return result;
+          }
+          if (!(key in obj)) {
+            let errmsg;
+            if (typeof key === "symbol") {
+              errmsg = `Symbol(${key.description}) is not defined`;
+            } else {
+              errmsg = `${key} is not defined`;
+            }
+            throw new ReferenceError(errmsg);
+          }
+          let result = Reflect.get(obj, key);
+          if (Blacklist.has(result)) {
+            throw `The access to ${key} has blocked.`;
+          }
+          if ((typeof result === "object" || typeof result === "function") && (!UntracedObjects.has(result))) {
+            return TrapObject(result);
+          }
           return result;
-        }
-        if (!(key in obj)) {
-          let errmsg;
-          if (typeof key === "symbol") {
-            errmsg = `Symbol(${key.description}) is not defined`;
-          } else {
-            errmsg = `${key} is not defined`;
-          }
-          throw new ReferenceError(errmsg);
-        }
-        let result = Reflect.get(obj, key);
-        if (Blacklist.has(result)) {
-          throw `The access to ${key} has blocked.`;
-        }
-        if ((typeof result === "object" || typeof result === "function") && (!UntracedObjects.has(result))) {
-          return TrapObject(result);
-        }
-        return result;
-      },
-      set: function _set(obj, key, value) {
-        if (TrapedObjects.has(value)) {
-          return Reflect.set(obj, key, TrapedObjects.get(value));
-        }
-        if (redirects.has(value)) {
-          return Reflect.set(obj, key, redirects.get(value));
-        } else {
-          if ((typeof value === "object" || typeof value === "function") && value) {
-            Reflect.ownKeys(value).forEach(function (e) {
-              let _value, skip = false;
-              try {
-                _value = value[e];
-              } catch {
-                skip = true;
-              }
-              if ((!DetectedObjects.includes(_value)) && (!skip)) {
-                DetectedObjects.push(_value);
-                return _set(value, e, _value);
-              }
-            });
-          }
-          return Reflect.set(obj, key, value);
-        }
-      },
-      has() {
-        return true;
-      },
-      defineProperty: function _defineProperty(o, p, a) {
-        if ("value" in a) {
+        },
+        set: function _set(obj, key, value, map, skipArgsReplaceMent) {
+          if (!skipArgsReplaceMent) arguments[0] = context;
           if (TrapedObjects.has(value)) {
-            a.value = TrapedObjects.get(value)
-            return Reflect.defineProperty(o, p, a);
+            return Reflect.set(obj, key, TrapedObjects.get(value));
           }
           if (redirects.has(value)) {
-            a.value = redirects.get(value);
-            return Reflect.defineProperty(o, p, a);
+            return Reflect.set(obj, key, redirects.get(value));
           } else {
-            if ((typeof a.value === "object" || typeof a.value === "function") & a.value) {
-              Reflect.ownKeys(a.value).forEach(function (e) {
-                let _value = a.value[e];
-                if (!DetectedObjects.includes(_value)) {
+            if ((typeof value === "object" || typeof value === "function") && value) {
+              Reflect.ownKeys(value).forEach(function (e) {
+                let _value, skip = false;
+                try {
+                  _value = value[e];
+                } catch {
+                  skip = true;
+                }
+                if ((!DetectedObjects.includes(_value)) && (!skip)) {
                   DetectedObjects.push(_value);
-                  return _defineProperty(a.value, e, Reflect.getOwnPropertyDescriptor(a.value, e));
+                  return _set(value, e, _value, null, true);
                 }
               });
             }
-            Reflect.defineProperty(o, p, a);
+            return Reflect.set(obj, key, value);
           }
-        } else {
-          Reflect.defineProperty(o, p, a);
-        }
-      },
-      getOwnPropertyDescriptor(o, p) {
-        let r1;
-        if (p === "undefined") { return { value: undefined, writable: false, enumerable: false, configurable: false } }
-        if (p === "null") { return { value: null, writable: false, enumerable: false, configurable: false } }
-        if ((typeof p !== "string") && (typeof p !== "symbol")) {
-          return undefined;
-        }
-        if (readOnce.has(p)) {
-          let result = readOnce.get(p);
-          readOnce.delete(p);
-          return { value: result, writable: false, enumerable: true, configurable: false };
-        }
-        r1 = Reflect.getOwnPropertyDescriptor(o, p);
-        if (!r1) { return r1; }
-        if ("value" in r1) {
-          if (Blacklist.has(r1.value)) {
-            throw `The access to ${p} has blocked.`;
+        },
+        has() {
+          return true;
+        },
+        defineProperty: function _defineProperty(o, p, a, m, sAR) {
+          if (!skipArgsReplaceMent) arguments[0] = context;
+          if ("value" in a) {
+            if (TrapedObjects.has(value)) {
+              a.value = TrapedObjects.get(value)
+              return Reflect.defineProperty(o, p, a);
+            }
+            if (redirects.has(value)) {
+              a.value = redirects.get(value);
+              return Reflect.defineProperty(o, p, a);
+            } else {
+              if ((typeof a.value === "object" || typeof a.value === "function") & a.value) {
+                Reflect.ownKeys(a.value).forEach(function (e) {
+                  let _value = a.value[e];
+                  if (!DetectedObjects.includes(_value)) {
+                    DetectedObjects.push(_value);
+                    return _defineProperty(a.value, e, Reflect.getOwnPropertyDescriptor(a.value, e), null, true);
+                  }
+                });
+              }
+              return Reflect.defineProperty(o, p, a);
+            }
+          } else {
+            return Reflect.defineProperty(o, p, a);
           }
-          if ((typeof r1.value === "object" || typeof r1.value === "function") && (!UntracedObjects.has(r1.value))) {
-            r1.value = TrapObject(r1.value);
-            return r1;
+        },
+        getOwnPropertyDescriptor(o, p) {
+          arguments[0] = context;
+          let r1;
+          if (p === "undefined") { return { value: undefined, writable: false, enumerable: false, configurable: false } }
+          if (p === "null") { return { value: null, writable: false, enumerable: false, configurable: false } }
+          if ((typeof p !== "string") && (typeof p !== "symbol")) {
+            return undefined;
           }
-        }
-        return r1;
-      },
-      ownKeys: customOwnKeys
-    });
+          if (readOnce.has(p)) {
+            let result = readOnce.get(p);
+            readOnce.delete(p);
+            return { value: result, writable: false, enumerable: true, configurable: false };
+          }
+          r1 = Reflect.getOwnPropertyDescriptor(o, p);
+          if (!r1) { return r1; }
+          if ("value" in r1) {
+            if (Blacklist.has(r1.value)) {
+              throw `The access to ${p} has blocked.`;
+            }
+            if ((typeof r1.value === "object" || typeof r1.value === "function") && (!UntracedObjects.has(r1.value))) {
+              r1.value = TrapObject(r1.value);
+              return r1;
+            }
+          }
+          return r1;
+        },
+        ownKeys: function () { arguments[0] = context; return customOwnKeys.apply(this, arguments); },
+        preventExtensions: function () { arguments[0] = context; Reflect.preventExtensions.apply(this, arguments); return false; }
+      };
+      ContainerGlobal = new Proxy(blankObject, genFallbackHandler(handlers, context));
+    })();
     UntracedObjects.add(ContainerGlobal);
     let _global = globalThis;
     let TimeoutTimer = new Map(), IntervalTimer = new Map();
@@ -345,7 +364,7 @@
       BackupPrototypes.set(obj, {});
       OriginArrayForEach.call(Reflect.ownKeys(obj.prototype), function (e) {
         if (backupBlacklist.includes(e)) return false;
-        if (typeof obj.prototype[e] === "symbol") { return false; }
+        //if (typeof obj.prototype[e] === "symbol") { return false; }
         Reflect.defineProperty(BackupPrototypes.get(obj), e, Object.getOwnPropertyDescriptor(obj.prototype, e));
       });
       BackupPrototypes.get(obj)[Symbol.iterator] = obj.prototype[Symbol.iterator];
@@ -360,7 +379,7 @@
       });
       OriginArrayForEach.call(Reflect.ownKeys(Prototype), function (e) {
         if (includesInBlacklist(e)) return false;
-        if (typeof Prototype[e] === "symbol") { return false; }
+        //if (typeof Prototype[e] === "symbol") { return false; }
         Reflect.defineProperty(obj.prototype, e, Object.getOwnPropertyDescriptor(BackupPrototypes.get(obj), e));
       });
       obj.prototype[Symbol.iterator] = BackupPrototypes.get(obj)[Symbol.iterator];
