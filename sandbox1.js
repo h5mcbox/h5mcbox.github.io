@@ -35,7 +35,7 @@
       } else {
         blankObject = function () { };
       }
-      let result = new Proxy(blankObject, {
+      let handlers = {
         get(obj, key) {
           arguments[0] = object;
           let r1;
@@ -159,7 +159,17 @@
           return r1;
         },
         ownKeys: function () { arguments[0] = object; return customOwnKeys.apply(this, arguments) }
-      });
+      };
+      let result = new Proxy(blankObject, new Proxy({}, {
+        get: function (o, k) {
+          function fallbackHandler() {
+            arguments[0] = object;
+            return Reflect[k].apply(this, arguments);
+          }
+          let handler = handlers[k] || fallbackHandler;
+          return handler;
+        }
+      }));
       TrapedObjects.set(object, result);
       return result;
     }
