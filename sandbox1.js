@@ -8,14 +8,15 @@
 })(
   function createContainer(containerParent = null) {
     let GeneratorFunction = (function* () { }).constructor;
+    let isTrapable = value => ((typeof value === "object" || typeof value === "function") && Boolean(value));
     let context = Object.create(containerParent), errors = [];
     let DetectedObjects = [],
       ObjectContext = new WeakMap(),
       WhiteOutMap = new WeakMap(),
-      TrapedObjects = new WeakMap(),
+      TrappedObjects = new WeakMap(),
       UntracedObjects = new WeakSet();
     let customOwnKeys = function ownKeys(o) {
-      let result = Reflect.ownKeys(o);
+      let result = Object.getOwnPropertyNames(o);
       result = result.filter(e => !(Blacklist.has(e)));
       if (ObjectContext.has(o)) {
         let resultSet = new Set(result);
@@ -27,13 +28,13 @@
       return result;
     }
     let TrapObject = function TrapObject(object) {
-      if (TrapedObjects.has(object)) return TrapedObjects.get(object)
-      if (!(typeof object === "object" || typeof object === "function")) throw "The target must be an object or an function.";
+      if (!isTrapable(object)) throw "The target must be an object or an function.";
+      if (TrappedObjects.has(object)) return TrappedObjects.get(object)
       let blankObject;
       if (typeof object === "object") {
         blankObject = {};
       } else {
-        blankObject = function () { };
+        blankObject = (class { static c() { } }).c;
       }
       let handlers = {
         get(obj, key) {
@@ -54,7 +55,7 @@
             return redirects.get(r1);
           } else if (Blacklist.has(r1)) {
             throw `The access to ${key} has blocked.`;
-          } else if ((typeof r1 === "object" || typeof r1 === "function") && (!UntracedObjects.has(r1))) {
+          } else if (isTrapable(r1) && (!UntracedObjects.has(r1))) {
             return TrapObject(r1);
           }
           return r1;
@@ -105,7 +106,7 @@
               return r1;
             } else if (Blacklist.has(r1.value)) {
               throw `The access to ${p} has blocked.`;
-            } else if ((typeof r1.value === "object" || typeof r1.value === "function") && (!UntracedObjects.has(r1.value))) {
+            } else if (isTrapable(r1) && (!UntracedObjects.has(r1.value))) {
               r1.value = TrapObject(Reflect.get(o, p));
               return r1;
             }
@@ -152,7 +153,7 @@
             return true;
           } else if (Blacklist.has(r1)) {
             return false;
-          } else if ((typeof r2 === "object" || typeof r2 === "function") && (!UntracedObjects.has(r2))) {
+          } else if (isTrapable(r2) && (!UntracedObjects.has(r2))) {
             TrapObject(r2);
             return true;
           };
@@ -162,7 +163,7 @@
         preventExtensions: function () { arguments[0] = object; Reflect.preventExtensions.apply(this, arguments); return false; }
       };
       let result = new Proxy(blankObject, genFallbackHandler(handlers, object));
-      TrapedObjects.set(object, result);
+      TrappedObjects.set(object, result);
       return result;
     }
     function genFallbackHandler(originalHandler, object) {
@@ -183,7 +184,7 @@
       if (typeof context === "object") {
         blankObject = {};
       } else {
-        blankObject = function () { };
+        blankObject = (class { static c() { } }).c;
       }
       let handlers = {
         get(obj, key) {
@@ -214,20 +215,23 @@
           if (Blacklist.has(result)) {
             throw `The access to ${key} has blocked.`;
           }
-          if ((typeof result === "object" || typeof result === "function") && (!UntracedObjects.has(result))) {
+          if (isTrapable(result) && (!UntracedObjects.has(result))) {
             return TrapObject(result);
           }
           return result;
         },
-        set: function _set(obj, key, value, map, skipArgsReplaceMent) {
-          if (!skipArgsReplaceMent) arguments[0] = context;
-          if (TrapedObjects.has(value)) {
-            return Reflect.set(obj, key, TrapedObjects.get(value));
+        set: function _set(obj, key, value, map, skipArgsReplacement) {
+          if (!skipArgsReplacement) arguments[0] = context;
+          if (TrappedObjects.has(value)) {
+            return Reflect.set(obj, key, TrappedObjects.get(value));
           }
           if (redirects.has(value)) {
             return Reflect.set(obj, key, redirects.get(value));
           } else {
-            if ((typeof value === "object" || typeof value === "function") && value) {
+            if (isTrapable(value) && !UntracedObjects.has(value) && !skipArgsReplacement) {
+              value = TrapObject(value);
+            }
+            if (isTrapable(value)) {
               Reflect.ownKeys(value).forEach(function (e) {
                 let _value, skip = false;
                 try {
@@ -248,17 +252,17 @@
           return true;
         },
         defineProperty: function _defineProperty(o, p, a, m, sAR) {
-          if (!skipArgsReplaceMent) arguments[0] = context;
+          if (!sAR) arguments[0] = context;
           if ("value" in a) {
-            if (TrapedObjects.has(value)) {
-              a.value = TrapedObjects.get(value)
+            if (TrappedObjects.has(value)) {
+              a.value = TrappedObjects.get(value)
               return Reflect.defineProperty(o, p, a);
             }
             if (redirects.has(value)) {
               a.value = redirects.get(value);
               return Reflect.defineProperty(o, p, a);
             } else {
-              if ((typeof a.value === "object" || typeof a.value === "function") & a.value) {
+              if (isTrapable(a.value)) {
                 Reflect.ownKeys(a.value).forEach(function (e) {
                   let _value = a.value[e];
                   if (!DetectedObjects.includes(_value)) {
@@ -332,6 +336,24 @@
         let IntervalID = IntervalTimer.get(_IntervalID);
         IntervalTimer.delete(_IntervalID);
         return clearInterval(IntervalID);
+      }],
+      [Object.freeze, function () {
+        try {
+          return Object.freeze.apply(this, arguments);
+        } catch (e) {
+          if (!e.toString().includes("trap returned falsish")) {
+            throw e;
+          };
+        }
+      }],
+      [Object.preventExtensions, function () {
+        try {
+          return Object.preventExtensions.apply(this, arguments);
+        } catch (e) {
+          if (!e.toString().includes("trap returned falsish")) {
+            throw e;
+          };
+        }
       }]
     ]);
     function clearTimers() {
