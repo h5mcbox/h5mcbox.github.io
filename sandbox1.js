@@ -17,6 +17,10 @@
       UntracedObjects = new WeakSet();
     let customOwnKeys = function ownKeys(o) {
       let result = Object.getOwnPropertyNames(o);
+      if(typeof o==="function"){
+        if(!result.includes("arguments"))result.push("arguments");
+        if(!result.includes("caller"))result.push("caller");
+      }
       result = result.filter(e => !(Blacklist.has(e)));
       if (ObjectContext.has(o)) {
         let resultSet = new Set(result);
@@ -33,8 +37,12 @@
       let blankObject;
       if (typeof object === "object") {
         blankObject = {};
-      } else {
-        blankObject = (class { static c() { } }).c;
+      } else if (typeof object === "function") {
+        if (!object.prototype) {
+          blankObject = (class { static c() { } }).c;
+        } else {
+          blankObject = function () { };
+        }
       }
       let handlers = {
         get(obj, key) {
@@ -183,8 +191,12 @@
       let blankObject;
       if (typeof context === "object") {
         blankObject = {};
-      } else {
-        blankObject = (class { static c() { } }).c;
+      } else if (typeof context === "function") {
+        if (!context.prototype) {
+          blankObject = (class { static c() { } }).c;
+        } else {
+          blankObject = function () { };
+        }
       }
       let handlers = {
         get(obj, key) {
