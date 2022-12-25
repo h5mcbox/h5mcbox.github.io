@@ -32,7 +32,9 @@
       return result;
     }
     let TrapObject = function TrapObject(object) {
-      if (!isTrapable(object)) throw "The target must be an object or an function.";
+      if (!isTrapable(object)){
+        throw "The target must be an object or an function.";
+      }
       if (TrappedObjects.has(object)) return TrappedObjects.get(object)
       let blankObject;
       if (typeof object === "object") {
@@ -114,7 +116,7 @@
               return r1;
             } else if (Blacklist.has(r1.value)) {
               throw `The access to ${p} has blocked.`;
-            } else if (isTrapable(r1) && (!UntracedObjects.has(r1.value))) {
+            } else if (isTrapable(r1.value) && (!UntracedObjects.has(r1.value))) {
               r1.value = TrapObject(Reflect.get(o, p));
               return r1;
             }
