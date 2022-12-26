@@ -17,9 +17,9 @@
       UntracedObjects = new WeakSet();
     let customOwnKeys = function ownKeys(o) {
       let result = Object.getOwnPropertyNames(o);
-      if(typeof o==="function"){
-        if(!result.includes("arguments"))result.push("arguments");
-        if(!result.includes("caller"))result.push("caller");
+      if (typeof o === "function") {
+        if (!result.includes("arguments")) result.push("arguments");
+        if (!result.includes("caller")) result.push("caller");
       }
       result = result.filter(e => !(Blacklist.has(e)));
       if (ObjectContext.has(o)) {
@@ -31,11 +31,7 @@
       }
       return result;
     }
-    let TrapObject = function TrapObject(object) {
-      if (!isTrapable(object)){
-        throw "The target must be an object or an function.";
-      }
-      if (TrappedObjects.has(object)) return TrappedObjects.get(object)
+    function getBlankObject(object) {
       let blankObject;
       if (typeof object === "object") {
         blankObject = {};
@@ -46,6 +42,14 @@
           blankObject = function () { };
         }
       }
+      return blankObject;
+    }
+    let TrapObject = function TrapObject(object) {
+      if (!isTrapable(object)) {
+        throw "The target must be an object or an function.";
+      }
+      if (TrappedObjects.has(object)) return TrappedObjects.get(object)
+      let blankObject = getBlankObject(object);
       let handlers = {
         get(obj, key) {
           arguments[0] = object;
@@ -190,16 +194,7 @@
     }
     let ContainerGlobal;
     (function () {
-      let blankObject;
-      if (typeof context === "object") {
-        blankObject = {};
-      } else if (typeof context === "function") {
-        if (!context.prototype) {
-          blankObject = (class { static c() { } }).c;
-        } else {
-          blankObject = function () { };
-        }
-      }
+      let blankObject = getBlankObject(context);
       let handlers = {
         get(obj, key) {
           arguments[0] = context;
